@@ -30,7 +30,7 @@ input.addEventListener("input", e => {
         search();
     }
 });
-button.addEventListener("click", () => { // 버튼 클릭으로 검색결과 출력
+button.addEventListener("click", _ => { // 버튼 클릭으로 검색결과 출력
     result.innerHTML = "";
     search();
 });
@@ -50,22 +50,91 @@ function auto(ele, idx) { // 자동완성 리스트 정렬
     }
 }
 function search() { // 검색결과 출력
+    const resultArr = [];
     let firstTime;
     let lastTime;
-    for (let i = 0; i < 10; i++) {
-        const tempA = `${sortArr[i].station_nm}역 ${line(sortArr[i].line_num)}`;
-        const tempB = `${sortArr[i].station_nm}역 ${line(sortArr[i].line_num)} 첫차: ${firstTime} / 막차: ${lastTime}`;
-        const divTag = document.createElement("div");
-        timeList.data.forEach(function (ele) { // 시간표
-            if (sortArr[i].fr_code == ele.fr_code) {
-                firstTime = ele.first_time;
-                lastTime = ele.last_time;
-            }
-        });
-        divTag.innerHTML = typeof firstTime === "undefined" ? tempA : tempB;
-        result.appendChild(divTag);
+    stationList.data.forEach(function (ele, idx, arr) {
+        if (arr[idx].station_nm.includes(input.value) && input.value.length != 0) {
+            resultArr.push(arr[idx]);
+            resultArr.sort((a, b) => {
+                if (a.station_nm < b.station_nm) {
+                    return -1;
+                }
+                if (a.station_nm > b.station_nm) {
+                    return 1;
+                }
+                return 0;
+            });
+        }
+    });
+    if (resultArr.length > 10) {
+        for (let i = 0; i < 10; i++) {
+            timeList.data.forEach(function (ele) { // 시간표
+                if (resultArr[i].fr_code == ele.fr_code) {
+                    firstTime = ele.first_time;
+                    lastTime = ele.last_time;
+                }
+            });
+            const tempA = `${resultArr[i].station_nm}역 ${line(resultArr[i].line_num)}`;
+            const tempB = `${resultArr[i].station_nm}역 ${line(resultArr[i].line_num)} 첫차: ${firstTime} / 막차: ${lastTime}`;
+            const divTag = document.createElement("div");
+            divTag.innerHTML = typeof firstTime === "undefined" ? tempA : tempB;
+            result.appendChild(divTag);
+        }
+    } else {
+        for (let i = 0; i < resultArr.length; i++) {
+            timeList.data.forEach(function (ele) { // 시간표
+                if (resultArr[i].fr_code == ele.fr_code) {
+                    firstTime = ele.first_time;
+                    lastTime = ele.last_time;
+                }
+            });
+            const tempA = `${resultArr[i].station_nm}역 ${line(resultArr[i].line_num)}`;
+            const tempB = `${resultArr[i].station_nm}역 ${line(resultArr[i].line_num)} 첫차: ${firstTime} / 막차: ${lastTime}`;
+            const divTag = document.createElement("div");
+            divTag.innerHTML = typeof firstTime === "undefined" ? tempA : tempB;
+            result.appendChild(divTag);
+        }
     }
 }
+input.addEventListener("keydown", e => { // 자동완성 리스트 하이라이트
+    const autoList = autocomplete.querySelectorAll("li");
+    if (e.key === "ArrowDown" && autoList.length > 0) {
+        count++;
+        if (count === 1) {
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 > 0 && count - 1 < autoList.length) {
+            autoList[count - 2].classList.replace("listSelect", "list");
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 === autoList.length) {
+            autoList[count - 2].classList.replace("listSelect", "list");
+            count = 1;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 > autoList.length) {
+            count = 1;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        }
+        input.value = sortArr[count - 1].station_nm;
+    }
+    if (e.key === "ArrowUp" && autoList.length > 0) {
+        count--;
+        if (count === -1) {
+            count = 10;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 > 0 && count - 1 < autoList.length) {
+            autoList[count].classList.replace("listSelect", "list");
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count === 1) {
+            autoList[count].classList.replace("listSelect", "list");
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count === 0) {
+            autoList[count].classList.replace("listSelect", "list");
+            count = 10;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        }
+        input.value = sortArr[count - 1].station_nm;
+    }
+});
 function line(num) {
     let lineNm;
     switch (num) {
@@ -101,43 +170,3 @@ function line(num) {
     }
     return lineNm;
 }
-input.addEventListener("keydown", e => { // 자동완성 리스트 하이라이트
-    const autoList = autocomplete.querySelectorAll("li");
-    if (e.key === "ArrowDown" && autoList.length > 0) {
-        count++;
-        console.log(count);
-        if (count === 1) {
-            autoList[count - 1].classList.replace("list", "listSelect");
-        } else if (count - 1 > 0 && count - 1 < autoList.length) {
-            autoList[count - 2].classList.replace("listSelect", "list");
-            autoList[count - 1].classList.replace("list", "listSelect");
-        } else if (count - 1 === autoList.length) {
-            autoList[count - 2].classList.replace("listSelect", "list");
-            count = 1;
-            autoList[count - 1].classList.replace("list", "listSelect");
-        } else if (count - 1 > autoList.length) {
-            count = 1;
-            autoList[count - 1].classList.replace("list", "listSelect");
-        }
-        input.value = sortArr[count - 1].station_nm;
-    }
-    if (e.key === "ArrowUp" && autoList.length > 0) {
-        count--;
-        console.log(count);
-        if (count === -1) {
-            count = 10;
-            autoList[count - 1].classList.replace("list", "listSelect");
-        } else if (count - 1 > 0 && count - 1 < autoList.length) {
-            autoList[count].classList.replace("listSelect", "list");
-            autoList[count - 1].classList.replace("list", "listSelect");
-        } else if (count === 1) {
-            autoList[count].classList.replace("listSelect", "list");
-            autoList[count - 1].classList.replace("list", "listSelect");
-        } else if (count === 0) {
-            autoList[count].classList.replace("listSelect", "list");
-            count = 10;
-            autoList[count - 1].classList.replace("list", "listSelect");
-        }
-        input.value = sortArr[count - 1].station_nm;
-    }
-});
