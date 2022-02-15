@@ -2,22 +2,28 @@ const input = document.querySelector("input");
 const button = document.querySelector("button");
 const autocomplete = document.querySelector(".autocomplete > ul");
 const result = document.querySelector(".result");
-let sortArr = [];
-let cnt = 0;
-let stArr = []; // 자동완성 리스트 역이름
+const sortArr = [];
+let count;
 
-input.focus();
 input.addEventListener("input", e => {
-    sortArr = [];
+    count = 0;
+    sortArr.splice(0, sortArr.length);
     autocomplete.innerHTML = "";
     stationList.data.forEach(auto);
-    stArr = ["", "", "", "", "", "", "", "", "", ""];
-    for (let i = 0; i < 10; i++) { // 자동완성 리스트 출력
-        const liTag = document.createElement("li");
-        liTag.innerHTML = `${sortArr[i].station_nm.split(input.value)[0]}<span>${input.value}</span>${sortArr[i].station_nm.split(input.value)[1]}역 ${line(sortArr[i].line_num)}`;
-        liTag.classList.add("list");
-        autocomplete.appendChild(liTag);
-        listPush(`${sortArr[i].station_nm}`);
+    if (sortArr.length > 10) { // 자동완성 리스트 출력
+        for (let i = 0; i < 10; i++) {
+            const liTag = document.createElement("li");
+            liTag.innerHTML = `${sortArr[i].station_nm.split(input.value)[0]}<span>${input.value}</span>${sortArr[i].station_nm.split(input.value)[1]}역 ${line(sortArr[i].line_num)}`;
+            liTag.classList.add("list");
+            autocomplete.appendChild(liTag);
+        }
+    } else {
+        for (let i = 0; i < sortArr.length; i++) {
+            const liTag = document.createElement("li");
+            liTag.innerHTML = `${sortArr[i].station_nm.split(input.value)[0]}<span>${input.value}</span>${sortArr[i].station_nm.split(input.value)[1]}역 ${line(sortArr[i].line_num)}`;
+            liTag.classList.add("list");
+            autocomplete.appendChild(liTag);
+        }
     }
     if (e.key == "Enter") { // Enter키로 검색결과 출력
         result.innerHTML = "";
@@ -47,6 +53,8 @@ function search() { // 검색결과 출력
     let firstTime;
     let lastTime;
     for (let i = 0; i < 10; i++) {
+        const tempA = `${sortArr[i].station_nm}역 ${line(sortArr[i].line_num)}`;
+        const tempB = `${sortArr[i].station_nm}역 ${line(sortArr[i].line_num)} 첫차: ${firstTime} / 막차: ${lastTime}`;
         const divTag = document.createElement("div");
         timeList.data.forEach(function (ele) { // 시간표
             if (sortArr[i].fr_code == ele.fr_code) {
@@ -54,13 +62,8 @@ function search() { // 검색결과 출력
                 lastTime = ele.last_time;
             }
         });
-        if (typeof firstTime == "undefined") {
-            divTag.innerHTML = `${sortArr[i].station_nm}역 ${line(sortArr[i].line_num)}`;
-            result.appendChild(divTag);
-        } else {
-            divTag.innerHTML = `${sortArr[i].station_nm}역 ${line(sortArr[i].line_num)} 첫차: ${firstTime} / 막차: ${lastTime}`;
-            result.appendChild(divTag);
-        }
+        divTag.innerHTML = typeof firstTime === "undefined" ? tempA : tempB;
+        result.appendChild(divTag);
     }
 }
 function line(num) {
@@ -98,34 +101,43 @@ function line(num) {
     }
     return lineNm;
 }
-input.addEventListener("keydown", (e) => { // 자동완성 리스트 하이라이트
-    let autoList = autocomplete.querySelectorAll("li");
+input.addEventListener("keydown", e => { // 자동완성 리스트 하이라이트
+    const autoList = autocomplete.querySelectorAll("li");
     if (e.key === "ArrowDown" && autoList.length > 0) {
-        if (cnt === 0) {
-            autoList[cnt].classList.replace("list", "listSelect");
-            input.value = `${stArr[cnt]}`;
-        } else if (cnt > 0 && cnt < autoList.length) {
-            autoList[cnt - 1].classList.replace("listSelect", "list");
-            autoList[cnt].classList.replace("list", "listSelect");
-            input.value = `${stArr[cnt]}`;
-        } else if (cnt === autoList.length) {
-            autoList[cnt - 1].classList.replace("listSelect", "list");
-            cnt = 0;
-            autoList[cnt].classList.replace("list", "listSelect");
-            input.value = `${stArr[cnt]}`;
-        } else if (cnt > autoList.length) {
-            cnt = 0;
-            autoList[cnt].classList.replace("list", "listSelect");
-            input.value = `${stArr[cnt]}`;
+        count++;
+        console.log(count);
+        if (count === 1) {
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 > 0 && count - 1 < autoList.length) {
+            autoList[count - 2].classList.replace("listSelect", "list");
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 === autoList.length) {
+            autoList[count - 2].classList.replace("listSelect", "list");
+            count = 1;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 > autoList.length) {
+            count = 1;
+            autoList[count - 1].classList.replace("list", "listSelect");
         }
-        cnt++;
+        input.value = sortArr[count - 1].station_nm;
+    }
+    if (e.key === "ArrowUp" && autoList.length > 0) {
+        count--;
+        console.log(count);
+        if (count === -1) {
+            count = 10;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count - 1 > 0 && count - 1 < autoList.length) {
+            autoList[count].classList.replace("listSelect", "list");
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count === 1) {
+            autoList[count].classList.replace("listSelect", "list");
+            autoList[count - 1].classList.replace("list", "listSelect");
+        } else if (count === 0) {
+            autoList[count].classList.replace("listSelect", "list");
+            count = 10;
+            autoList[count - 1].classList.replace("list", "listSelect");
+        }
+        input.value = sortArr[count - 1].station_nm;
     }
 });
-function listPush(str) { // 배열에 역이름 저장
-    for (let i = 0; i < 10; i++) {
-        if (stArr[i] === "") {
-            stArr[i] = str;
-            break;
-        }
-    }
-}
