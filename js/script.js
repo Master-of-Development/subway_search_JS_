@@ -38,7 +38,7 @@ function auto(ele, idx) { // 자동완성 리스트 정렬
     let stName = stationList.data[idx].station_nm;
     if (stName.includes(input.value) && input.value.length != 0) {
         sortArr.push(stationList.data[idx]);
-        sortArr.sort(function sortAuto(a, b) {
+        sortArr.sort((a, b) => {
             if (a.station_nm < b.station_nm) {
                 return -1;
             }
@@ -53,9 +53,9 @@ function search() { // 검색결과 출력
     const resultArr = [];
     let firstTime;
     let lastTime;
-    stationList.data.forEach(function (ele, idx, arr) {
-        if (arr[idx].station_nm.includes(input.value) && input.value.length != 0) {
-            resultArr.push(arr[idx]);
+    stationList.data.forEach(ele => {
+        if (ele.station_nm.includes(input.value) && input.value.length != 0) {
+            resultArr.push(ele);
             resultArr.sort((a, b) => {
                 if (a.station_nm < b.station_nm) {
                     return -1;
@@ -69,8 +69,8 @@ function search() { // 검색결과 출력
     });
     if (resultArr.length > 10) {
         for (let i = 0; i < 10; i++) {
-            timeList.data.forEach(function (ele) { // 시간표
-                if (resultArr[i].fr_code == ele.fr_code) {
+            timeList.data.forEach(ele => { // 시간표
+                if (resultArr[i].fr_code === ele.fr_code) {
                     firstTime = ele.first_time;
                     lastTime = ele.last_time;
                 }
@@ -83,8 +83,8 @@ function search() { // 검색결과 출력
         }
     } else {
         for (let i = 0; i < resultArr.length; i++) {
-            timeList.data.forEach(function (ele) { // 시간표
-                if (resultArr[i].fr_code == ele.fr_code) {
+            timeList.data.forEach(ele => { // 시간표
+                if (resultArr[i].fr_code === ele.fr_code) {
                     firstTime = ele.first_time;
                     lastTime = ele.last_time;
                 }
